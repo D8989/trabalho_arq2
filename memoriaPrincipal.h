@@ -16,6 +16,6 @@ int* 	alocaMP();	//aloca o vetor
 void 	desalocaMP(int *mp);
 int 	retornaPalavra(int *mp, endereco end); 
 void	encherMP(int *mp); //inicializa o vetor com valores "aleatorios"
-void	msgError(const char *msg);// imprime a mensagem de erro e fecha o programa
+void	msgErrorMP(const char *msg);// imprime a mensagem de erro e fecha o programa
 
 #endif

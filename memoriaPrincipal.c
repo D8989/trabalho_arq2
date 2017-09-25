@@ -10,7 +10,7 @@
 int* alocaMP(){
 	int *mem = (int*)malloc(sizeof(int)*TAMANHO_MP);
 	if(mem == NULL){
-		msgError("Não foi possivel alocar a memoria principal");
+		msgErrorMP("Não foi possivel alocar a memoria principal");
 	}
 	return mem;
 }
@@ -25,7 +25,7 @@ int retornaPalavra(int *mp, endereco end){
 		++i;
 	}
 	if(i == TAMANHO_MP){
-		msgError("endereço fora do limite da memoria principal.");
+		msgErrorMP("endereço fora do limite da memoria principal.");
 	}
 	return mp[i];
 }
@@ -37,7 +37,8 @@ void encherMP(int *mp){
 	}
 }
 
-void msgError(const char *msg){
+void msgErrorMP(const char *msg){
+	printf("\tERROR: memoria Principal:\n");
 	puts(msg);
 	exit(-1);
 }

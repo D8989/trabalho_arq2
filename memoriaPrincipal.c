@@ -1,5 +1,5 @@
 //	Nome: 	Daniel Juventude Moreira
-//		Vitoria
+//			Vitoria
 //	corpo das funções sobre a memoria principal
 //	e funções basicas
 
@@ -19,7 +19,7 @@ void desalocaMP(int *mp){
 	free(mp);
 }
 
-int retornaPalavra(int *mp, endereco end){
+int retornaPalavraMP(int *mp, uint32_t end){
 	int i = 0;
 	while(i < TAMANHO_MP && i < end){
 		++i;
@@ -30,7 +30,28 @@ int retornaPalavra(int *mp, endereco end){
 	return mp[i];
 }
 
-void encherMP(int *mp){
+void lerPalavras(int *mp, uint32_t end, int *palavras, int n, int offset)
+{
+	int i = 0;
+	int j;
+	int tag = end >> offset;
+	int tagAux;
+	while(i < TAMANHO_MP){
+		tagAux = i >> offset;
+		if(tagAux == tag){
+			for(j = 0; j < n; ++j, ++i){
+				palavras[j] = mp[i];
+			}
+			i = TAMANHO_MP;
+		}
+		i += n;
+	}
+	if(i == TAMANHO_MP){
+		msgErrorMP("endereço fora do limite da memoria principal.");
+	}
+}
+
+void initMP(int *mp){
 	int i;
 	for(i = 0; i < TAMANHO_MP; ++i){
 		mp[i] = 2*i;

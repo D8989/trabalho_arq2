@@ -5,8 +5,8 @@
 
 #include <stdint.h>
 
-#define NUM_BLOCOS 	4
-#define NUM_PALAVRA 1
+#define NUM_BLOCOS 	8
+#define NUM_PALAVRA 4
 #define LINHA NUM_PALAVRA+2 
 #define ID_TAG LINHA-1	//ultima linha é a tag (rotulo)
 #define ID_VALIDADE LINHA-2	//penultima linha é o bit de validade

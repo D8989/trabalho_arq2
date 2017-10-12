@@ -6,8 +6,11 @@ Modificar a cache:
 	Modifique as canstantes NUM_BLOCOS e NUM_PALAVRA.
 	NUM_BLOCOS e NUM_PALAVRA devem conter valores multiplos de 2, mas NUM_BLOCOS e NUM_PALAVRA podem ser iguais à 1.
 
-para compilar:
+para compilar o de cache Direto:
 	gcc memoriaCacheDireto.c memoriaPrincipal.c mainDireto.c
+
+para compilar o de cache por conjunto:
+	gcc memoriaCacheDireto.c memoriaPrincipal.c mainConjunto.c
 
 OBS:
 	os arquivos *.c e *.h devem estar na mesma pagina

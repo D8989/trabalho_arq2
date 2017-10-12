@@ -44,6 +44,9 @@ void atualizarFifo(int ***cache, int c);
 //imprime a cache na tela
 void printCache(int ***cache);
 
+//TESTE
+void printControle(int ***cache);
+
 int fatoracao(int a);
 void msgErrorCache(const char *msg);
 

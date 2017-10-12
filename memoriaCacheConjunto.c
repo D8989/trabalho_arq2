@@ -57,6 +57,18 @@ void initCache(int ***cache)
 	}
 }
 
+void initFifo(int ***cache)
+{
+	int i, j;
+
+	for(i = 0; i < CONJUNTOS; ++i){
+		cache[i][0][ID_CONTROLE] = 1;
+		for(j = 1; j < BLOCOS; j++){
+			cache[i][j][ID_CONTROLE] = 0;
+		}
+	}
+}
+
 //retorna o endereco do conjunto
 uint32_t endConjunto(uint32_t end)
 {
@@ -76,7 +88,7 @@ uint32_t tagEndereco(uint32_t endereco)
 	int offset = fatoracao(PALAVRAS);
 	offset += fatoracao(CONJUNTOS);
 	endereco = endereco >> offset;
-	return (uint32_t)endereco;
+	return endereco;
 }
 
 // retorna o bit validade do bloco
@@ -119,22 +131,24 @@ void escreverCache(int ***cache, uint32_t endereco, int *dados)
 	int i;
 	int c = endConjunto(endereco);
 	int b = procuraBloco(cache, c);
+	int tag = tagEndereco(endereco);
 	if(b < 0){
 		b = proxBlocoSair(cache, c);
 		for(i = 0; i < PALAVRAS; ++i){
 			cache[c][b][i] = dados[i];
 		}
 		atualizarFifo(cache, c);
-		cache[c][b][ID_VALIDADE] = 1;
+		//cache[c][b][ID_VALIDADE] = 1;
 	}else{
 		//printf("b = %d\n", b);
 		for(i = 0; i < PALAVRAS; ++i){
 			//printf("dados[%d] = %d\n",i, dados[i]);
 			cache[c][b][i] = dados[i];
 		}
-		cache[c][b][ID_VALIDADE] = 1;
+		//cache[c][b][ID_VALIDADE] = 1;
 	}
-
+	cache[c][b][ID_VALIDADE] = 1;
+	cache[c][b][ID_TAG] = tag;
 }
 
 //retorna 1 se todos os blocos do conjunto c estiverem cheios
@@ -149,17 +163,7 @@ int procuraBloco(int ***cache, int c)
 	return -1;
 }
 
-void initFifo(int ***cache)
-{
-	int i, j;
 
-	for(i = 0; i < CONJUNTOS; ++i){
-		cache[i][0][ID_CONTROLE] = 1;
-		for(j = 1; j < BLOCOS; j++){
-			cache[i][0][ID_CONTROLE] = 0;
-		}
-	}
-}
 
 int proxBlocoSair(int ***cache, int c)
 {
@@ -172,7 +176,7 @@ int proxBlocoSair(int ***cache, int c)
 
 void atualizarFifo(int ***cache, int c)
 {
-	int b;
+	int b = 0;
 	while(cache[c][b][ID_CONTROLE] != 1){
 		b++;
 	}
@@ -221,4 +225,20 @@ int fatoracao(int a)
 		cont++;
 	}
 	return cont;
+}
+
+
+//TESTE
+void printControle(int ***cache)
+{
+	int i,j;
+	for(i = 0; i < CONJUNTOS; i++){
+		printf("\t\t\tConjunto %d\n", i);
+		for(j = 0; j < BLOCOS; j++){
+			printf("\t\t\t\tBloco %d: \n",j);
+			printf("\t\t\t\t\tControle: %d\n", cache[i][j][ID_CONTROLE]);
+			printf("\t\t\t\t\tValidade: %d\n", cache[i][j][ID_VALIDADE]);
+			printf("\t\t\t\t\tTAG: %d\n", cache[i][j][ID_TAG]);
+		}
+	}
 }

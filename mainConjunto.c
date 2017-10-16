@@ -2,7 +2,7 @@
 #include "memoriaPrincipal.h"
 #include "memoriaCacheConjunto.h"
 
-#define TESTES 4
+#define TESTES 20
 
 //Apenas para testes
 void printDados(int *v){
@@ -15,15 +15,16 @@ void printDados(int *v){
 }
 
 int main(){
-	int *mPrincipal = alocaMP();
-	initMP(mPrincipal);
 
-	int ***mCache = alocaCache();
+	CONJUNTO mCache[CONJUNTOS];
 	initCache(mCache);
 	initFifo(mCache);
 
+	int *mPrincipal = alocaMP();
+	initMP(mPrincipal);
+
 	int hit = 0, miss = 0;
-	uint32_t endereco[TESTES] = {0, 8, 16, 32};
+	uint32_t endereco[TESTES] = {0, 8, 16, 32,0,5,45,7,2,36,69,54,14,21,15,87,74,56,55,66};
 	int palavra;
 	int dados[PALAVRAS];
 	int i;
@@ -47,6 +48,6 @@ int main(){
 
 	
 	desalocaMP(mPrincipal);
-	desalocaCache(mCache);
+
 	return 0;
 }

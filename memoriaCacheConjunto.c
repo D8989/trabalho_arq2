@@ -228,6 +228,7 @@ void printCache(CONJUNTO *cache)
 				printf("\t|\t\tCONTROLE = %d\n",cache[c].bloco[b].controle);
 				for(p = 0; p < PALAVRAS; p++){
 					printf("\t|\t\t\tword %d: %d\n", p,cache[c].bloco[b].palavra[p]);
+
 				}
 			}
 		}

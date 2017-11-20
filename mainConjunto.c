@@ -24,8 +24,12 @@ int main(){
 	int *mPrincipal = alocaMP();
 	initMP(mPrincipal);
 
+	int *mPrincipal = alocaMP();
+	initMP(mPrincipal);
+
 	int hit = 0, miss = 0;
 	uint32_t endereco[TESTES] = {0, 8, 16, 32,0,5,45,7,2,120,69,11,14,2,15,87,5,56,55,127};
+
 	int palavra;
 	int dados[PALAVRAS];
 	int i;

@@ -40,15 +40,16 @@ uint32_t tagEndereco(uint32_t endereco);
 
 // retorna 1 se o endereco foi encontrada, a 'palavra' recebe o dado requisidado
 int lerPalavraCache(CONJUNTO *cache, uint32_t endereco, int *palavra);
+
 // retorna 1 se o endereco foi encontrada, a 'palavra' recebe o dado requisidado, atualiza o lru
 int lerPalavraCacheLRU(CONJUNTO *cache, uint32_t endereco, int *palavra);
 // escreve o conjunto de palavras na cache
 void escreverCache(CONJUNTO *cache, uint32_t endereco, int *dados);
 // escreve o conjunto de palavras na cache
 void escreverCacheLRU(CONJUNTO *cache, uint32_t endereco, int *dados);
+
 //retorna o indice do primeiro bloco vazio, ou -1 se o bloco do conjunto c estiver cheio
 int procuraBloco(CONJUNTO *cache, int c);
-//int procuraBloco(int ***cache, int c);
 
 //inicia o bit de controle - FIFO
 void initFifo(CONJUNTO *cache);

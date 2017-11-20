@@ -2,72 +2,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int*** alocaCache()
-{
-	if(CONJUNTOS%2 != 0 && CONJUNTOS != 1){
-		msgErrorCache("número de conjuntos não é multiplo de 2.");
-	}
-	if(PALAVRAS%2 != 0 && PALAVRAS != 1){
-		msgErrorCache("número de palavras por bloco não é multiplo de dois.");
-	}
-	int i, j;
-
-	int*** cache = (int***)malloc(sizeof(int**)*CONJUNTOS);
-	if(cache == NULL){
-		msgErrorCache("não foi possivel alocar a memoria para os conjuntos.");
-	}
-	
-	for(i = 0; i < CONJUNTOS; ++i){
-		cache[i] = (int**)malloc(sizeof(int*)*BLOCOS);
-		if(cache[i] == NULL){
-			msgErrorCache("não foi possivel alocar a memoria para os blocos.");
-		}
-
-		for(j = 0; j < BLOCOS; ++j){
-			cache[i][j] = (int*)malloc(sizeof(int)*LINHA);
-			if(cache[i][j] == NULL){
-				msgErrorCache("Não foi possivel alocar a memoria para as palavras.");
-			}
-		}
-	}
-
-	return cache;
-}
-
-void desalocaCache(int ***cache)
+void initCache(CONJUNTO *cache)
 {
 	int i, j;
 	for(i = 0; i < CONJUNTOS; ++i){
 		for(j = 0; j < BLOCOS; ++j){
-			free(cache[i][j]);
-		}
-		free(cache[i]);
-	}
-	free(cache);
-}
-
-void initCache(int ***cache)
-{
-	int i, j;
-	for(i = 0; i < CONJUNTOS; ++i){
-		for(j = 0; j < BLOCOS; ++j){
-			cache[i][j][ID_VALIDADE] = 0;
-			cache[i][j][ID_TAG] = -1;
+			cache[i].bloco[j].bitValidade = 0;
+			cache[i].bloco[j].tag = -1;
 		}
 	}
 }
-
-void initFifo(int ***cache)
+// inicia a função de troca FIFO 
+void initFifo(CONJUNTO *cache)
 {
 	int i, j;
-
 	for(i = 0; i < CONJUNTOS; ++i){
-		cache[i][0][ID_CONTROLE] = 1;
+		cache[i].bloco[0].controle = 1;
 		for(j = 1; j < BLOCOS; j++){
-			cache[i][j][ID_CONTROLE] = 0;
+			cache[i].bloco[j].controle = 0;
 		}
 	}
 }
+
+//inicia o bit de controle - LRU
+void initLRU(CONJUNTO *cache)
+{
+	int i, j;
+	int cont;
+	for(i = 0; i < CONJUNTOS; ++i){
+		cont = 1;
+		cache[i].bloco[0].controle = cont;
+		for(j = 1; j < BLOCOS; j++){
+			cont++;
+			cache[i].bloco[j].controle = cont;
+		}
+	}
+}
+
 
 //retorna o endereco do conjunto
 uint32_t endConjunto(uint32_t end)
@@ -92,19 +63,19 @@ uint32_t tagEndereco(uint32_t endereco)
 }
 
 // retorna o bit validade do bloco
-int bitValidade(int ***cache, int c, int b)
+int bitValidade(CONJUNTO *cache, int c, int b)
 {
-	return cache[c][b][ID_VALIDADE];
+	return cache[c].bloco[b].bitValidade;
 }
 
 // retorna a tag do bloco
-int tagBloco(int ***cache, int c, int b)
+int tagBloco(CONJUNTO *cache, int c, int b)
 {
-	return cache[c][b][ID_TAG];
+	return cache[c].bloco[b].tag;
 }
 
 // retorna 1 se o endereco foi encontrada, a 'palavra' recebe o dado requisidado
-int lerPalavraCache(int ***cache, uint32_t endereco, int *palavra)
+int lerPalavraCache(CONJUNTO *cache, uint32_t endereco, int *palavra)
 {
 	int c = endConjunto(endereco);
 	int t = tagEndereco(endereco);
@@ -115,48 +86,85 @@ int lerPalavraCache(int ***cache, uint32_t endereco, int *palavra)
 		if(validade == 1){
 			int tag = tagBloco(cache, c, bloco);
 			if(tag == t){
-				*palavra = cache[c][bloco][p];
+				*palavra = cache[c].bloco[bloco].palavra[p];
 				return 1;
 			}
 		}else{
-			return 0; //bloco vazio
+			return 0; //bloco vazio encontrado
 		}
 	}
-	return 0;
+	return 0; //bloco cheio
+}
+
+// retorna 1 se o endereco foi encontrada, a 'palavra' recebe o dado requisidado, atualiza o lru
+int lerPalavraCacheLRU(CONJUNTO *cache, uint32_t endereco, int *palavra)
+{
+	int c = endConjunto(endereco);
+	int t = tagEndereco(endereco);
+	int p = endPalavra(endereco);
+	int bloco;
+	for(bloco = 0; bloco < BLOCOS; ++bloco){
+		int validade = bitValidade(cache, c, bloco);
+		if(validade == 1){
+			int tag = tagBloco(cache, c, bloco);
+			if(tag == t){
+				*palavra = cache[c].bloco[bloco].palavra[p];
+				atualizarLRU(cache, c, bloco);
+				return 1;
+			}
+		}else{
+			return 0; //bloco vazio encontrado
+		}
+	}
+	return 0; //bloco cheio
 }
 
 // escreve o conjunto de palavras na cache
-void escreverCache(int ***cache, uint32_t endereco, int *dados)
+void escreverCache(CONJUNTO *cache, uint32_t endereco, int *dados)
 {
 	int i;
 	int c = endConjunto(endereco);
 	int b = procuraBloco(cache, c);
 	int tag = tagEndereco(endereco);
+
 	if(b < 0){
 		b = proxBlocoSair(cache, c);
-		for(i = 0; i < PALAVRAS; ++i){
-			cache[c][b][i] = dados[i];
-		}
 		atualizarFifo(cache, c);
-		//cache[c][b][ID_VALIDADE] = 1;
-	}else{
-		//printf("b = %d\n", b);
-		for(i = 0; i < PALAVRAS; ++i){
-			//printf("dados[%d] = %d\n",i, dados[i]);
-			cache[c][b][i] = dados[i];
-		}
-		//cache[c][b][ID_VALIDADE] = 1;
 	}
-	cache[c][b][ID_VALIDADE] = 1;
-	cache[c][b][ID_TAG] = tag;
+	for(i = 0; i < PALAVRAS; ++i){
+		cache[c].bloco[b].palavra[i] = dados[i];
+	}
+
+	cache[c].bloco[b].bitValidade = 1;
+	cache[c].bloco[b].tag = tag;
+}
+
+// escreve o conjunto de palavras na cache
+void escreverCacheLRU(CONJUNTO *cache, uint32_t endereco, int *dados)
+{
+	int i;
+	int c = endConjunto(endereco);
+	int b = procuraBloco(cache, c);
+	int tag = tagEndereco(endereco);
+
+	if(b < 0){ //Cache está cheia
+		b = proxBlocoSair(cache, c);
+	}
+	for(i = 0; i < PALAVRAS; ++i){
+		cache[c].bloco[b].palavra[i] = dados[i];
+	}
+
+	cache[c].bloco[b].bitValidade = 1;
+	cache[c].bloco[b].tag = tag;
+	atualizarLRU(cache, c, b);
 }
 
 //retorna 1 se todos os blocos do conjunto c estiverem cheios
-int procuraBloco(int ***cache, int c)
+int procuraBloco(CONJUNTO *cache, int c)
 {
 	int b;
 	for(b = 0; b < BLOCOS; ++b){
-		if(cache[c][b][ID_VALIDADE] == 0){
+		if(cache[c].bloco[b].bitValidade == 0){
 			return b;
 		}
 	}
@@ -165,45 +173,61 @@ int procuraBloco(int ***cache, int c)
 
 
 
-int proxBlocoSair(int ***cache, int c)
+int proxBlocoSair(CONJUNTO *cache, int c)
 {
 	int b = 0;
-	while(cache[c][b][ID_CONTROLE] != 1){
+	while(cache[c].bloco[b].controle != 1){
 		b++;
 	}
 	return b;
 }
 
-void atualizarFifo(int ***cache, int c)
+void atualizarFifo(CONJUNTO *cache, int c)
 {
 	int b = 0;
-	while(cache[c][b][ID_CONTROLE] != 1){
+	while(cache[c].bloco[b].controle != 1){
 		b++;
 	}
-	cache[c][b][ID_CONTROLE] = 0;
+	cache[c].bloco[b].controle = 0;
 	if(b == BLOCOS-1){
-		cache[c][0][ID_CONTROLE] = 1;
+		cache[c].bloco[0].controle = 1;//volta pro inicio do bloco
 	}else{
 		b++;
-		cache[c][b][ID_CONTROLE] = 1;
+		cache[c].bloco[b].controle = 1;
+	}
+}
+
+//atualiza a LRU do conjunto c
+void atualizarLRU(CONJUNTO *cache, int c, int b)
+{
+	int i;
+	int aux = cache[c].bloco[b].controle;
+	for(i = 0; i < BLOCOS; ++i){
+		if(i == b){
+			cache[c].bloco[i].controle = MAIS_RECENTE;
+		}else
+		if(cache[c].bloco[i].controle >= aux){
+			cache[c].bloco[i].controle -= 1;
+		}
 	}
 }
 
 //imprime a cache na tela
-void printCache(int ***cache)
+void printCache(CONJUNTO *cache)
 {
 	int c,b,p;
 	for(c = 0; c < CONJUNTOS; c++){
-		printf("\tConunto %d:\n", c);
+		printf("\tConjunto %d:*******************************\n", c);
 		for(b = 0; b < BLOCOS; b++){
-			printf("\t\tBloco %d\n", b);
-			if(cache[c][b][ID_VALIDADE] == 0){
-				printf("\t\t\tVAZIO\n");
+			printf("\t|\tBloco %d ---------------------------\n", b);
+			if(cache[c].bloco[b].bitValidade == 0){
+				printf("\t|\t\tVAZIO\n");
+				//printf("\t|\t\tCONTROLE = %d\n",cache[c].bloco[b].controle);
 			}else{
-				printf("\t\t\tTAG = %d\n", cache[c][b][ID_TAG]);
-				printf("\t\t\tCONTROLE = %d\n", cache[c][b][ID_CONTROLE]);
+				printf("\t|\t\tTAG = %d\n",cache[c].bloco[b].tag);
+				printf("\t|\t\tCONTROLE = %d\n",cache[c].bloco[b].controle);
 				for(p = 0; p < PALAVRAS; p++){
-					printf("\t\t\t\tword %d: %d\n", p, cache[c][b][p]);
+					printf("\t|\t\t\tword %d: %d\n", p,cache[c].bloco[b].palavra[p]);
 				}
 			}
 		}
@@ -229,16 +253,16 @@ int fatoracao(int a)
 
 
 //TESTE
-void printControle(int ***cache)
+void printControle(CONJUNTO *cache)
 {
 	int i,j;
 	for(i = 0; i < CONJUNTOS; i++){
 		printf("\t\t\tConjunto %d\n", i);
 		for(j = 0; j < BLOCOS; j++){
 			printf("\t\t\t\tBloco %d: \n",j);
-			printf("\t\t\t\t\tControle: %d\n", cache[i][j][ID_CONTROLE]);
-			printf("\t\t\t\t\tValidade: %d\n", cache[i][j][ID_VALIDADE]);
-			printf("\t\t\t\t\tTAG: %d\n", cache[i][j][ID_TAG]);
+			printf("\t\t\t\t\tControle: %d\n",cache[i].bloco[j].controle);
+			printf("\t\t\t\t\tValidade: %d\n",cache[i].bloco[j].bitValidade);
+			printf("\t\t\t\t\tTAG: %d\n",cache[i].bloco[j].tag);
 		}
 	}
 }

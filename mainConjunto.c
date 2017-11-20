@@ -18,8 +18,8 @@ int main(){
 
 	CONJUNTO mCache[CONJUNTOS];
 	initCache(mCache);
-	//initFifo(mCache);
-	initLRU(mCache);
+	//initFifo(mCache); 	//desmonete essa linha pra usar a FIFO
+	initLRU(mCache);	//desmonete essa linha pra usar a LRU
 
 	int *mPrincipal = alocaMP();
 	initMP(mPrincipal);
@@ -36,16 +36,16 @@ int main(){
 	int flag;
 	for(i = 0; i < TESTES; ++i){
 		printf("endereco = %d; tag = %d; Conjunto = %d;\n", endereco[i], tagEndereco(endereco[i]), endConjunto(endereco[i]));
-		//flag = lerPalavraCache(mCache, endereco[i], &palavra);
-		flag = lerPalavraCacheLRU(mCache, endereco[i], &palavra);
+		//flag = lerPalavraCache(mCache, endereco[i], &palavra); //FIFO
+		flag = lerPalavraCacheLRU(mCache, endereco[i], &palavra);//LRU
 		if( flag ){
 			printf("PALAVRA = %d\n", palavra);
 			hit++;
 		}else{
 			lerPalavras(mPrincipal, endereco[i], dados, PALAVRAS, fatoracao(PALAVRAS));
 			printDados(dados);
-			//escreverCache(mCache, endereco[i], dados);
-			escreverCacheLRU(mCache, endereco[i], dados);
+			//escreverCache(mCache, endereco[i], dados);	//FIFO
+			escreverCacheLRU(mCache, endereco[i], dados);	//LRU
 			miss++;
 		}
 		printCache(mCache);
